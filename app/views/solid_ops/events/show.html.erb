@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>SolidOps – Event <%= @event.id %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 16px; }
+      a { color: inherit; }
+      .back { margin-bottom: 16px; display: inline-block; opacity: 0.7; }
+      .detail { margin-bottom: 24px; }
+      .detail dt { font-size: 12px; opacity: 0.7; margin-top: 12px; }
+      .detail dd { margin: 4px 0 0 0; }
+      .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; border: 1px solid #eee; font-size: 12px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New"; font-size: 13px; }
+      pre { background: #f5f5f5; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+      th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+      th { font-size: 12px; opacity: 0.7; }
+      .muted { opacity: 0.7; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="<%= solid_ops.events_path %>">&larr; All events</a>
+
+    <h1>Event #<%= @event.id %></h1>
+
+    <dl class="detail">
+      <dt>Type</dt>
+      <dd><span class="pill"><%= @event.event_type %></span></dd>
+
+      <dt>Name</dt>
+      <dd class="mono"><%= @event.name %></dd>
+
+      <dt>Occurred at</dt>
+      <dd class="mono"><%= @event.occurred_at&.strftime("%Y-%m-%d %H:%M:%S.%L") %></dd>
+
+      <dt>Duration</dt>
+      <dd class="mono"><%= @event.duration_ms ? format("%.2fms", @event.duration_ms) : "—" %></dd>
+
+      <dt>Correlation ID</dt>
+      <dd class="mono"><%= @event.correlation_id || "—" %></dd>
+
+      <dt>Request ID</dt>
+      <dd class="mono"><%= @event.request_id || "—" %></dd>
+
+      <dt>Tenant</dt>
+      <dd class="mono"><%= @event.tenant_id || "—" %></dd>
+
+      <dt>Actor</dt>
+      <dd class="mono"><%= @event.actor_id || "—" %></dd>
+
+      <dt>Metadata</dt>
+      <dd><pre><%= JSON.pretty_generate(@event.metadata) rescue @event.metadata.inspect %></pre></dd>
+    </dl>
+
+    <% if @related.any? %>
+      <h2>Correlated events</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Type</th>
+            <th>Name</th>
+            <th>Duration</th>
+            <th>Request</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @related.each do |e| %>
+            <tr<%= " style='background:#fffbe6'" if e.id == @event.id %>>
+              <td class="mono"><a href="<%= solid_ops.event_path(e.id) %>"><%= e.occurred_at&.strftime("%Y-%m-%d %H:%M:%S.%L") %></a></td>
+              <td><span class="pill"><%= e.event_type %></span></td>
+              <td class="mono"><%= e.name %></td>
+              <td class="mono muted"><%= e.duration_ms ? format("%.2fms", e.duration_ms) : "" %></td>
+              <td class="mono muted"><%= e.request_id %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </body>
+</html>
