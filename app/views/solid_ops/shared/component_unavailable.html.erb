@@ -1,0 +1,63 @@
+<% content_for :title, "#{@component_name} Not Available" %>
+
+<main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  <div class="text-center">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-50 mb-6 ring-1 ring-inset ring-amber-500/20">
+      <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+      </svg>
+    </div>
+
+    <h1 class="text-xl font-extrabold text-gray-900 tracking-tight mb-2"><%= @component_name %> is not available</h1>
+    <p class="text-sm text-gray-500 mb-8">
+      <%= @component_name %> provides <%= @component_description %>.
+      It needs to be installed and configured before SolidOps can manage it.
+    </p>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Setup steps</h2>
+    </div>
+    <div class="px-6 py-5">
+      <ol class="space-y-4 text-sm">
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold ring-1 ring-inset ring-blue-700/10">1</span>
+          <div>
+            <p class="text-gray-700 font-medium">Add the gem to your Gemfile</p>
+            <code class="mt-1.5 block bg-gray-50 rounded-lg px-3 py-2 text-xs font-mono text-gray-600 ring-1 ring-inset ring-gray-900/5">gem "<%= @component_gem %>"</code>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold ring-1 ring-inset ring-blue-700/10">2</span>
+          <div>
+            <p class="text-gray-700 font-medium">Install and run migrations</p>
+            <code class="mt-1.5 block bg-gray-50 rounded-lg px-3 py-2 text-xs font-mono text-gray-600 ring-1 ring-inset ring-gray-900/5">bundle install && <%= @install_command %></code>
+          </div>
+        </li>
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold ring-1 ring-inset ring-blue-700/10">3</span>
+          <div>
+            <p class="text-gray-700 font-medium">Restart your Rails server</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="px-6 py-4 bg-gray-50/50">
+      <p class="text-xs text-gray-400">
+        Already installed? Make sure the database is created and migrations have been run.
+        <br>
+        <code class="font-mono text-gray-500">bin/rails db:create db:migrate</code>
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-8 text-center">
+    <a href="<%= solid_ops.root_path %>" class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Back to Dashboard
+    </a>
+  </div>
+</main>

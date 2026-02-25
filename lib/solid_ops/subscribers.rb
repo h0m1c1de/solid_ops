@@ -40,7 +40,7 @@ module SolidOps
             event_type: "job.enqueue",
             name: job_name(job),
             duration_ms: e.duration,
-            metadata: job_metadata(job).merge(queue: p[:queue], adapter: p[:adapter])
+            metadata: job_metadata(job).merge(queue: p[:queue].to_s, adapter: p[:adapter].to_s)
           )
         end
 
@@ -119,6 +119,7 @@ module SolidOps
 
       def record_event!(event_type:, name:, duration_ms:, metadata:)
         return if Thread.current[:solid_ops_recording]
+        return unless SolidOps.configuration.sample?
 
         Thread.current[:solid_ops_recording] = true
 
@@ -139,7 +140,8 @@ module SolidOps
           occurred_at: Time.current,
           metadata: meta
         )
-      rescue StandardError
+      rescue StandardError => e
+        Rails.logger.warn("[SolidOps] Failed to record event: #{e.class}: #{e.message}") if defined?(Rails.logger)
         nil
       ensure
         Thread.current[:solid_ops_recording] = false
@@ -147,9 +149,10 @@ module SolidOps
 
       def truncate_meta(meta)
         max = SolidOps.configuration.max_payload_bytes.to_i
-        return meta if max <= 0
-        json = meta.to_json
-        return meta if json.bytesize <= max
+        safe = safe_serialize(meta)
+        return safe if max <= 0
+        json = safe.to_json
+        return safe if json.bytesize <= max
         { truncated: true, max_bytes: max, bytes: json.bytesize }
       rescue
         { unserializable: true }
@@ -171,14 +174,27 @@ module SolidOps
       end
 
       def safe_arguments(args)
-        v = args.as_json
         max = SolidOps.configuration.max_payload_bytes.to_i
-        return v if max <= 0
-        json = v.to_json
-        return v if json.bytesize <= max
+        json = Array(args).map { |a| safe_serialize(a) }.to_json
+        return Array(args).map { |a| safe_serialize(a) } if max <= 0 || json.bytesize <= max
         { truncated: true, max_bytes: max }
       rescue
         { unserializable: true }
+      end
+
+      def safe_serialize(obj)
+        case obj
+        when String, Numeric, NilClass, TrueClass, FalseClass
+          obj
+        when Hash
+          obj.transform_values { |v| safe_serialize(v) }
+        when Array
+          obj.map { |v| safe_serialize(v) }
+        else
+          obj.to_s
+        end
+      rescue
+        obj.class.name.to_s
       end
 
       def bytesize(value)

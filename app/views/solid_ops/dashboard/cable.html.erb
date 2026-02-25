@@ -1,0 +1,98 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Dashboard</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Cable Events</h1>
+      <p class="text-sm text-gray-500 mt-1">ActionCable broadcasts observed via instrumentation</p>
+    </div>
+    <%= render "solid_ops/shared/time_window" %>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Broadcasts</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-purple-600"><%= number_with_delimiter(@broadcast_count) %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-gray-300 to-gray-400"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Avg Duration</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-gray-900"><%= format_duration(@avg_duration) %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-400 to-indigo-600"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Active Streams</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-indigo-600"><%= @streams.length %></p>
+      </div>
+    </div>
+  </div>
+
+  <% if @streams.any? %>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-bold text-gray-900">Streams by Activity</h2>
+      </div>
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Stream</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Broadcasts</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Avg Duration</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @streams.each do |s| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.events_path(event_type: 'cable.broadcast', q: s.name) %>'">
+              <td class="px-6 py-3.5 font-mono text-sm text-purple-600 font-medium"><%= s.name %></td>
+              <td class="px-6 py-3.5 font-mono text-sm font-semibold text-gray-900"><%= s.event_count %></td>
+              <td class="px-6 py-3.5 font-mono text-sm text-gray-500"><%= format_duration(s.avg_duration) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-bold text-gray-900">Recent Broadcasts</h2>
+    </div>
+    <% if @recent.any? %>
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Time</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Stream</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Duration</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Correlation</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @recent.each do |e| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.event_path(e.id) %>'">
+              <td class="px-6 py-3.5 font-mono text-xs text-blue-600 font-medium"><%= format_time(e.occurred_at) %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-700"><%= e.name %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= format_duration(e.duration_ms) %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-400"><%= e.correlation_id&.first(8) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0"/></svg>
+        </div>
+        <p class="text-sm text-gray-500 font-medium">No cable events in this time window</p>
+        <p class="text-xs text-gray-400 mt-1">Try selecting a larger time range above</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

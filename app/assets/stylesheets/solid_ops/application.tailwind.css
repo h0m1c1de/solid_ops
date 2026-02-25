@@ -1,0 +1,162 @@
+/*
+ * SolidOps — Scoped Tailwind CSS
+ *
+ * Preflight is disabled in tailwind.config.js so we don't reset the
+ * host app's global styles. Instead, we apply a minimal scoped reset
+ * inside .solid-ops only.
+ *
+ * @tailwind base is still included because it outputs CSS custom
+ * property initialization (--tw-gradient-from, --tw-ring-color, etc.)
+ * which utilities depend on. These are inert — they set variables to
+ * initial/empty values and don't change any visible styling.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Scoped reset (replaces Preflight) ─────────────────────────────── */
+.solid-ops {
+  /* Box-sizing & border reset */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: #e5e7eb;
+  }
+
+  /* Base typography */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+  font-size: 0.875rem;
+  color: #111827;
+  background-color: #f9fafb;
+  min-height: 100vh;
+
+  /* Heading reset */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+
+  /* Link reset */
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  /* List reset */
+  ol, ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Image reset */
+  img, svg, video, canvas {
+    display: block;
+    vertical-align: middle;
+    max-width: 100%;
+  }
+
+  /* Table reset */
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+
+  /* Form reset */
+  button, input, optgroup, select, textarea {
+    font-family: inherit;
+    font-size: 100%;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+  }
+
+  button, [role="button"] {
+    cursor: pointer;
+  }
+
+  button, select {
+    text-transform: none;
+  }
+
+  /* Strong / code */
+  b, strong {
+    font-weight: bolder;
+  }
+
+  code, kbd, pre, samp {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 1em;
+  }
+
+  /* HR */
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+}
+
+/* ── Scrollbar styling (scoped) ────────────────────────────────────── */
+.solid-ops ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.solid-ops ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.solid-ops ::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.solid-ops ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ── Custom animations ─────────────────────────────────────────────── */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.25s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}

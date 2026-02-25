@@ -1,0 +1,116 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Queues &rsaquo; Jobs</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Job #<%= @job.id %></h1>
+      <p class="text-sm text-gray-500 mt-1 font-mono"><%= @job.class_name %></p>
+    </div>
+    <div class="flex items-center gap-3">
+      <% if @job.failed_execution %>
+        <%= form_tag(solid_ops.retry_job_path(@job.id), method: :post, class: "inline") do %>
+          <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors ring-1 ring-inset ring-blue-700/10">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Retry
+          </button>
+        <% end %>
+        <%= form_tag(solid_ops.discard_job_path(@job.id), method: :post, class: "inline") do %>
+          <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors ring-1 ring-inset ring-red-600/10"
+                  onclick="return confirm('Discard this job?')">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Discard
+          </button>
+        <% end %>
+      <% end %>
+      <a href="<%= solid_ops.queues_path %>" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Queues
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Job details -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900">Job Details</h3>
+      </div>
+      <div class="p-6">
+        <dl class="space-y-4">
+          <% status = @job.finished? ? "finished" : (@job.failed_execution ? "failed" : (@job.claimed_execution ? "claimed" : "ready")) %>
+          <div class="flex items-start">
+            <dt class="w-32 flex-shrink-0 text-xs font-bold text-gray-400 uppercase tracking-wide pt-0.5">Status</dt>
+            <dd><span class="<%= status_pill(status) %>"><%= status %></span></dd>
+          </div>
+          <% [
+            ["Class", @job.class_name],
+            ["Queue", @job.queue_name],
+            ["Priority", @job.priority || 0],
+            ["Active Job ID", @job.active_job_id],
+            ["Concurrency Key", @job.concurrency_key],
+            ["Created", format_datetime(@job.created_at)],
+            ["Scheduled At", format_datetime(@job.scheduled_at)],
+            ["Finished At", format_datetime(@job.finished_at)],
+          ].each do |label, value| %>
+            <div class="flex items-start">
+              <dt class="w-32 flex-shrink-0 text-xs font-bold text-gray-400 uppercase tracking-wide pt-0.5"><%= label %></dt>
+              <dd class="font-mono text-sm text-gray-700"><%= value.presence || "—" %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Arguments -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900">Arguments</h3>
+      </div>
+      <div class="p-6">
+        <%
+          args_data = @job.arguments
+          formatted_args = begin
+            parsed = args_data.is_a?(String) ? JSON.parse(args_data) : args_data
+            JSON.pretty_generate(parsed)
+          rescue
+            args_data.to_s
+          end
+        %>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs font-mono text-gray-700 max-h-80 overflow-y-auto ring-1 ring-inset ring-gray-900/5" style="white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word;"><%= formatted_args %></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error info -->
+  <% if @job.failed_execution %>
+    <div class="bg-red-50 rounded-xl border border-red-200 shadow-sm overflow-hidden mb-8 ring-1 ring-inset ring-red-600/10">
+      <div class="px-6 py-4 border-b border-red-200/50">
+        <h3 class="text-sm font-bold text-red-900">Error Details</h3>
+      </div>
+      <div class="p-6">
+        <% error = begin; JSON.parse(@job.failed_execution.error.to_s); rescue; {}; end %>
+        <dl class="space-y-4">
+          <div class="flex items-start">
+            <dt class="w-32 flex-shrink-0 text-xs font-bold text-red-400 uppercase tracking-wide pt-0.5">Exception</dt>
+            <dd class="font-mono text-sm text-red-700 font-bold"><%= error["exception_class"] || "Unknown" %></dd>
+          </div>
+          <div class="flex items-start">
+            <dt class="w-32 flex-shrink-0 text-xs font-bold text-red-400 uppercase tracking-wide pt-0.5">Message</dt>
+            <dd class="font-mono text-sm text-red-700"><%= error["message"] || "No message" %></dd>
+          </div>
+          <div class="flex items-start">
+            <dt class="w-32 flex-shrink-0 text-xs font-bold text-red-400 uppercase tracking-wide pt-0.5">Failed At</dt>
+            <dd class="font-mono text-sm text-red-700"><%= format_datetime(@job.failed_execution.created_at) %></dd>
+          </div>
+        </dl>
+        <% if error["backtrace"].present? %>
+          <div class="mt-6">
+            <p class="text-xs font-bold text-red-400 uppercase tracking-wide mb-2">Backtrace</p>
+            <pre class="bg-red-100/50 rounded-lg p-4 text-xs font-mono text-red-800 max-h-64 overflow-y-auto ring-1 ring-inset ring-red-600/10" style="white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word;"><%= Array(error["backtrace"]).first(20).join("\n") %></pre>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+

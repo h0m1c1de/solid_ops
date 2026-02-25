@@ -1,83 +1,108 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>SolidOps – Event <%= @event.id %></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 16px; }
-      a { color: inherit; }
-      .back { margin-bottom: 16px; display: inline-block; opacity: 0.7; }
-      .detail { margin-bottom: 24px; }
-      .detail dt { font-size: 12px; opacity: 0.7; margin-top: 12px; }
-      .detail dd { margin: 4px 0 0 0; }
-      .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; border: 1px solid #eee; font-size: 12px; }
-      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New"; font-size: 13px; }
-      pre { background: #f5f5f5; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-      th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
-      th { font-size: 12px; opacity: 0.7; }
-      .muted { opacity: 0.7; }
-    </style>
-  </head>
-  <body>
-    <a class="back" href="<%= solid_ops.events_path %>">&larr; All events</a>
 
-    <h1>Event #<%= @event.id %></h1>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Events</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Event Detail</h1>
+      <p class="text-sm text-gray-500 mt-1">ID: <%= @event.id %></p>
+    </div>
+    <a href="<%= solid_ops.events_path %>" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      All Events
+    </a>
+  </div>
 
-    <dl class="detail">
-      <dt>Type</dt>
-      <dd><span class="pill"><%= @event.event_type %></span></dd>
-
-      <dt>Name</dt>
-      <dd class="mono"><%= @event.name %></dd>
-
-      <dt>Occurred at</dt>
-      <dd class="mono"><%= @event.occurred_at&.strftime("%Y-%m-%d %H:%M:%S.%L") %></dd>
-
-      <dt>Duration</dt>
-      <dd class="mono"><%= @event.duration_ms ? format("%.2fms", @event.duration_ms) : "—" %></dd>
-
-      <dt>Correlation ID</dt>
-      <dd class="mono"><%= @event.correlation_id || "—" %></dd>
-
-      <dt>Request ID</dt>
-      <dd class="mono"><%= @event.request_id || "—" %></dd>
-
-      <dt>Tenant</dt>
-      <dd class="mono"><%= @event.tenant_id || "—" %></dd>
-
-      <dt>Actor</dt>
-      <dd class="mono"><%= @event.actor_id || "—" %></dd>
-
-      <dt>Metadata</dt>
-      <dd><pre><%= JSON.pretty_generate(@event.metadata) rescue @event.metadata.inspect %></pre></dd>
-    </dl>
-
-    <% if @related.any? %>
-      <h2>Correlated events</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Type</th>
-            <th>Name</th>
-            <th>Duration</th>
-            <th>Request</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @related.each do |e| %>
-            <tr<%= " style='background:#fffbe6'" if e.id == @event.id %>>
-              <td class="mono"><a href="<%= solid_ops.event_path(e.id) %>"><%= e.occurred_at&.strftime("%Y-%m-%d %H:%M:%S.%L") %></a></td>
-              <td><span class="pill"><%= e.event_type %></span></td>
-              <td class="mono"><%= e.name %></td>
-              <td class="mono muted"><%= e.duration_ms ? format("%.2fms", e.duration_ms) : "" %></td>
-              <td class="mono muted"><%= e.request_id %></td>
-            </tr>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Overview -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-gray-900">Overview</h3>
+        <span class="<%= event_pill_class(@event.event_type) %>"><%= @event.event_type %></span>
+      </div>
+      <div class="p-6">
+        <dl class="space-y-3">
+          <% [
+            ["Name", @event.name],
+            ["Type", @event.event_type],
+            ["Occurred", format_datetime(@event.occurred_at)],
+            ["Duration", format_duration(@event.duration_ms)],
+            ["Correlation ID", @event.correlation_id],
+            ["Request ID", @event.request_id],
+            ["Tenant", @event.tenant_id],
+            ["Actor", @event.actor_id],
+          ].each do |label, value| %>
+            <div class="flex items-start">
+              <dt class="w-32 flex-shrink-0 text-[11px] font-bold text-gray-400 uppercase tracking-wide pt-0.5"><%= label %></dt>
+              <dd class="font-mono text-sm text-gray-700"><%= value.presence || "—" %></dd>
+            </div>
           <% end %>
-        </tbody>
-      </table>
-    <% end %>
-  </body>
-</html>
+        </dl>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900">Metadata</h3>
+      </div>
+      <div class="p-6">
+        <% if @event.metadata.present? %>
+          <pre class="bg-gray-50 rounded-lg p-4 text-xs font-mono text-gray-700 overflow-x-auto max-h-80 overflow-y-auto ring-1 ring-inset ring-gray-900/5"><%= JSON.pretty_generate(@event.metadata) rescue @event.metadata.to_s %></pre>
+        <% else %>
+          <div class="text-center py-8">
+            <div class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 mb-3">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <p class="text-sm text-gray-400">No metadata recorded</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Correlation Timeline -->
+  <% if @related.present? && @related.size > 1 %>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-gray-900">Correlation Timeline</h3>
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 ring-1 ring-inset ring-gray-500/10"><%= @related.size %> related event<%= "s" unless @related.size == 1 %></span>
+      </div>
+      <div class="p-6">
+        <div class="relative pl-6 border-l-2 border-gray-200 space-y-6">
+          <% @related.each do |rel| %>
+            <% is_current = rel.id == @event.id %>
+            <div class="relative">
+              <%
+                dot_color = case rel.event_type.to_s
+                            when /^cable\./  then is_current ? "bg-purple-500" : "bg-purple-200 border-2 border-purple-400"
+                            when /^job\./    then is_current ? "bg-blue-500" : "bg-blue-200 border-2 border-blue-400"
+                            when /^cache\./  then is_current ? "bg-emerald-500" : "bg-emerald-200 border-2 border-emerald-400"
+                            else is_current ? "bg-gray-500" : "bg-gray-200 border-2 border-gray-400"
+                            end
+              %>
+              <div class="absolute -left-[25px] top-1 w-3 h-3 rounded-full <%= dot_color %> <%= 'ring-4 ring-blue-50' if is_current %>"></div>
+              <div class="<%= is_current ? 'bg-blue-50/50 -mx-3 px-3 py-2 rounded-lg ring-1 ring-inset ring-blue-100' : '' %>">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="<%= event_pill_class(rel.event_type) %> text-[10px]"><%= rel.event_type %></span>
+                  <span class="font-mono text-xs text-gray-400"><%= format_datetime(rel.occurred_at) %></span>
+                  <% if rel.duration_ms %>
+                    <span class="font-mono text-xs text-gray-400"><%= format_duration(rel.duration_ms) %></span>
+                  <% end %>
+                </div>
+                <div class="font-mono text-xs mt-1">
+                  <% if is_current %>
+                    <strong class="text-gray-900"><%= rel.name %></strong>
+                    <span class="text-gray-400">(this event)</span>
+                  <% else %>
+                    <a href="<%= solid_ops.event_path(rel.id) %>" class="text-blue-600 hover:text-blue-700"><%= rel.name %></a>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+

@@ -1,96 +1,98 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>SolidOps</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 16px; }
-      .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-      label { font-size: 12px; display: block; margin-bottom: 4px; opacity: 0.8; }
-      input, select { padding: 8px; border: 1px solid #ddd; border-radius: 10px; min-width: 220px; }
-      button { padding: 9px 14px; border-radius: 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-      table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-      th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; vertical-align: top; }
-      th { font-size: 12px; opacity: 0.7; }
-      .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; border: 1px solid #eee; font-size: 12px; }
-      a { color: inherit; }
-      .muted { opacity: 0.7; }
-      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New"; font-size: 12px; }
-    </style>
-  </head>
-  <body>
-    <h1>SolidOps</h1>
 
-    <form method="get" action="<%= solid_ops.events_path %>">
-      <div class="row">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="mb-8">
+    <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Events</h1>
+    <p class="text-sm text-gray-500 mt-1">Browse and filter all captured instrumentation events</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-bold text-gray-900">Filters</h2>
+    </div>
+    <div class="p-6">
+      <form method="get" action="<%= solid_ops.events_path %>" class="flex flex-wrap gap-3 items-end">
         <div>
-          <label>Event type</label>
-          <select name="event_type">
-            <option value=""></option>
-            <% ["cable.broadcast","job.enqueue","job.perform_start","job.perform","cache.read","cache.write","cache.delete"].each do |t| %>
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Type</label>
+          <select name="event_type" class="rounded-lg border-gray-300 text-sm py-2 px-3 min-w-[160px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            <option value="">All</option>
+            <% %w[cable.broadcast job.enqueue job.perform_start job.perform cache.read cache.write cache.delete].each do |t| %>
               <option value="<%= t %>" <%= "selected" if params[:event_type].to_s == t %>><%= t %></option>
             <% end %>
           </select>
         </div>
-
         <div>
-          <label>Correlation ID</label>
-          <input name="correlation_id" value="<%= params[:correlation_id].to_s %>">
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Correlation ID</label>
+          <input name="correlation_id" value="<%= params[:correlation_id].to_s %>" placeholder="uuid" class="rounded-lg border-gray-300 text-sm py-2 px-3 min-w-[160px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
-
         <div>
-          <label>Request ID</label>
-          <input name="request_id" value="<%= params[:request_id].to_s %>">
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Tenant</label>
+          <input name="tenant_id" value="<%= params[:tenant_id].to_s %>" placeholder="tenant" class="rounded-lg border-gray-300 text-sm py-2 px-3 min-w-[120px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
-
         <div>
-          <label>Tenant</label>
-          <input name="tenant_id" value="<%= params[:tenant_id].to_s %>">
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Actor</label>
+          <input name="actor_id" value="<%= params[:actor_id].to_s %>" placeholder="actor" class="rounded-lg border-gray-300 text-sm py-2 px-3 min-w-[120px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
-
         <div>
-          <label>Name contains</label>
-          <input name="q" value="<%= params[:q].to_s %>">
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Name contains</label>
+          <input name="q" value="<%= params[:q].to_s %>" placeholder="search..." class="rounded-lg border-gray-300 text-sm py-2 px-3 min-w-[160px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
-
         <div>
-          <label>Limit</label>
-          <input name="limit" value="<%= params[:limit].presence || 200 %>">
+          <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Since</label>
+          <input name="since" type="datetime-local" value="<%= params[:since].to_s %>" class="rounded-lg border-gray-300 text-sm py-2 px-3 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
-
-        <div>
-          <button type="submit">Filter</button>
-          <a href="<%= solid_ops.root_path %>"><button type="button">Clear</button></a>
+        <div class="flex gap-2">
+          <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+            Filter
+          </button>
+          <a href="<%= solid_ops.events_path %>" class="px-4 py-2 bg-white text-gray-500 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">Clear</a>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
+  </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Type</th>
-          <th>Name</th>
-          <th>Duration</th>
-          <th>Correlation</th>
-          <th>Request</th>
-          <th>Tenant</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @events.each do |e| %>
-          <tr>
-            <td class="mono"><a href="<%= solid_ops.event_path(e.id) %>"><%= e.occurred_at&.strftime("%Y-%m-%d %H:%M:%S.%L") %></a></td>
-            <td><span class="pill"><%= e.event_type %></span></td>
-            <td class="mono"><%= e.name %></td>
-            <td class="mono muted"><%= e.duration_ms ? format("%.2fms", e.duration_ms) : "" %></td>
-            <td class="mono muted"><%= e.correlation_id %></td>
-            <td class="mono muted"><%= e.request_id %></td>
-            <td class="mono muted"><%= e.tenant_id %></td>
+  <!-- Results -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <% if @events.any? %>
+      <table id="events-table" class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Time</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Type</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Name</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="num">Duration</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Correlation</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Tenant</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </body>
-</html>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @events.each do |e| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.event_path(e.id) %>'">
+              <td class="px-6 py-3.5 font-mono text-xs whitespace-nowrap text-blue-600"><%= format_datetime(e.occurred_at) %></td>
+              <td class="px-6 py-3.5"><span class="<%= event_pill_class(e.event_type) %>"><%= e.event_type %></span></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-700 max-w-xs truncate"><%= e.name %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= format_duration(e.duration_ms) %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-400" onclick="event.stopPropagation()">
+                <% if e.correlation_id.present? %>
+                  <a href="<%= solid_ops.events_path(correlation_id: e.correlation_id) %>" class="text-blue-600 hover:text-blue-700"><%= e.correlation_id.first(8) %></a>
+                <% end %>
+              </td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-400"><%= e.tenant_id %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <%= render "solid_ops/shared/pagination", current_page: @current_page, total_pages: @total_pages, total_count: @total_count %>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </div>
+        <p class="text-sm text-gray-500 font-medium">No events found matching your filters</p>
+        <p class="text-xs text-gray-400 mt-1">Try adjusting filter criteria or clearing all filters</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

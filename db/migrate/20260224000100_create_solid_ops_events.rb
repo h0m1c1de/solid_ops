@@ -22,6 +22,8 @@ class CreateSolidOpsEvents < ActiveRecord::Migration[7.1]
     add_index :solid_ops_events, :correlation_id
     add_index :solid_ops_events, :request_id
     add_index :solid_ops_events, :tenant_id
+    add_index :solid_ops_events, :actor_id
+    add_index :solid_ops_events, :name
     add_index :solid_ops_events, [:event_type, :occurred_at]
   end
 end

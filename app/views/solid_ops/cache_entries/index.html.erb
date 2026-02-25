@@ -1,0 +1,86 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Cache Management</h1>
+      <p class="text-sm text-gray-500 mt-1">Solid Cache &mdash; browse and manage cache entries</p>
+    </div>
+    <% if @total_entries > 0 %>
+      <%= form_tag(solid_ops.clear_all_cache_entries_path, method: :post, class: "inline") do %>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors ring-1 ring-inset ring-red-600/10"
+                onclick="return confirm('Clear ALL <%= @total_entries %> cache entries? This cannot be undone.')">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Clear All Cache
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Entries</p>
+      <p class="text-3xl font-extrabold font-mono mt-2"><%= number_with_delimiter(@total_entries) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Storage Used</p>
+      <p class="text-3xl font-extrabold font-mono mt-2 text-blue-600"><%= format_bytes(@total_bytes) %></p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600"></div>
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Avg Entry Size</p>
+      <p class="text-3xl font-extrabold font-mono mt-2 text-emerald-600"><%= @total_entries > 0 ? format_bytes(@total_bytes / @total_entries) : "—" %></p>
+    </div>
+  </div>
+
+  <!-- Entries table -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <% if @entries.any? %>
+      <div style="padding: 0.625rem 1rem; border-bottom: 1px solid rgb(243 244 246);">
+        <div style="position: relative; display: inline-block;">
+          <svg style="position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: #9ca3af; pointer-events: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" data-solid-search="cache-table" placeholder="Filter cache keys…" style="padding: 0.375rem 0.75rem 0.375rem 2rem; font-size: 0.875rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; width: 18rem; background: rgba(249,250,251,0.5);">
+        </div>
+      </div>
+      <table id="cache-table" class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Key</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="num">Size</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Created</th>
+            <th class="px-6 py-3 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @entries.each do |entry| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.cache_entry_path(entry.id) %>'">
+              <td class="px-6 py-3.5 font-mono text-xs text-blue-600 max-w-md truncate"><%= entry.key %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= format_bytes(entry.byte_size) %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= time_ago_short(entry.created_at) %></td>
+              <td class="px-6 py-3.5 text-right" onclick="event.stopPropagation()">
+                <%= form_tag(solid_ops.cache_entry_path(entry.id), method: :delete, class: "inline") do %>
+                  <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors ring-1 ring-inset ring-red-600/10"
+                          onclick="if(!confirm('Delete this cache entry?')){event.preventDefault();}">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Delete
+                  </button>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <%= render "solid_ops/shared/pagination", current_page: @current_page, total_pages: @total_pages, total_count: @total_count %>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <p class="text-sm text-gray-500 font-medium">Cache is empty</p>
+        <p class="text-xs text-gray-400 mt-1">Cache entries will appear here when your app writes to the cache</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

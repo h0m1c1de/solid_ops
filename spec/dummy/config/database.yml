@@ -1,0 +1,21 @@
+default: &default
+  adapter: sqlite3
+  pool: 5
+  timeout: 5000
+
+test:
+  primary:
+    <<: *default
+    database: ':memory:'
+  queue:
+    <<: *default
+    database: ':memory:'
+    migrations_paths: db/queue_migrate
+  cache:
+    <<: *default
+    database: ':memory:'
+    migrations_paths: db/cache_migrate
+  cable:
+    <<: *default
+    database: ':memory:'
+    migrations_paths: db/cable_migrate

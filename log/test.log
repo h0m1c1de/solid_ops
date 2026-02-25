@@ -1,0 +1,2 @@
+[SolidOps] WARNING: No auth_check configured — the dashboard is publicly accessible. Set SolidOps.configure { |c| c.auth_check = ->(controller) { controller.current_user&.admin? } } in an initializer to restrict access.
+[SolidOps] WARNING: No auth_check configured — the dashboard is publicly accessible. Set SolidOps.configure { |c| c.auth_check = ->(controller) { controller.current_user&.admin? } } in an initializer to restrict access.

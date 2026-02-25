@@ -6,8 +6,14 @@
 /pkg/
 /spec/reports/
 /tmp/
+Gemfile.lock
 
 # rspec failure tracking
 .rspec_status
 
 SolidOps.md
+
+# Node.js (only used for building Tailwind CSS at dev/release time)
+node_modules/
+package.json
+package-lock.json

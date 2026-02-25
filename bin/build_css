@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Builds the production Tailwind CSS for the SolidOps engine.
+# Run this before releasing a new gem version:
+#
+#   ./bin/build_css
+#
+# Requirements: Node.js (npx) — only needed at build time, not at deploy time.
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+INPUT="$ROOT/app/assets/stylesheets/solid_ops/application.tailwind.css"
+OUTPUT="$ROOT/app/assets/stylesheets/solid_ops/application.css"
+
+echo "Building SolidOps CSS..."
+npx tailwindcss@3 \
+  --config "$ROOT/tailwind.config.js" \
+  --input "$INPUT" \
+  --output "$OUTPUT" \
+  --minify
+
+SIZE=$(wc -c < "$OUTPUT" | tr -d ' ')
+echo "✓ Built $OUTPUT (${SIZE} bytes)"

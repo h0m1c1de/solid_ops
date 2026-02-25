@@ -16,9 +16,29 @@ module SolidOps
       SolidOps::Current.request_id =
         env["HTTP_X_REQUEST_ID"] || env["action_dispatch.request_id"] || SecureRandom.uuid
 
+      request = ActionDispatch::Request.new(env) if resolve_tenant? || resolve_actor?
+
+      if resolve_tenant?
+        SolidOps::Current.tenant_id = SolidOps.configuration.tenant_resolver.call(request).to_s rescue nil
+      end
+
+      if resolve_actor?
+        SolidOps::Current.actor_id = SolidOps.configuration.actor_resolver.call(request).to_s rescue nil
+      end
+
       @app.call(env)
     ensure
       SolidOps::Current.reset
+    end
+
+    private
+
+    def resolve_tenant?
+      SolidOps.configuration.tenant_resolver.respond_to?(:call)
+    end
+
+    def resolve_actor?
+      SolidOps.configuration.actor_resolver.respond_to?(:call)
     end
   end
 end

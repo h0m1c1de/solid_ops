@@ -1,0 +1,153 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Cache</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Cache Entry</h1>
+      <p class="text-sm text-gray-500 mt-1 font-mono truncate max-w-lg"><%= @entry.key %></p>
+    </div>
+    <div class="flex items-center gap-3">
+      <%= form_tag(solid_ops.cache_entry_path(@entry.id), method: :delete, class: "inline") do %>
+        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors ring-1 ring-inset ring-red-600/10"
+                onclick="return confirm('Delete this cache entry?')">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Delete
+        </button>
+      <% end %>
+      <a href="<%= solid_ops.cache_entries_path %>" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Cache
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900">Entry Details</h3>
+      </div>
+      <div class="p-6">
+        <dl class="space-y-3">
+          <% details = [
+            ["Key", @entry.key],
+            ["Size", format_bytes(@entry.byte_size)],
+            ["Key Hash", @entry.key_hash],
+            ["Created", format_datetime(@entry.created_at)],
+          ]
+          details << ["Updated", format_datetime(@entry.updated_at)] if @entry.respond_to?(:updated_at)
+          details.each do |label, value| %>
+            <div class="flex items-start">
+              <dt class="w-24 flex-shrink-0 text-[11px] font-bold text-gray-400 uppercase tracking-wide pt-0.5"><%= label %></dt>
+              <dd class="font-mono text-sm text-gray-700 break-all"><%= value.presence || "—" %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h3 class="text-sm font-bold text-gray-900">Value Preview</h3>
+      </div>
+      <div class="p-6">
+        <%
+          raw = @entry.value.to_s
+          deserialized = nil
+          decode_method = nil
+
+          # Strategy 1: Use the cache store's internal deserializer on the raw blob
+          begin
+            if Rails.cache.respond_to?(:deserialize_entry, true)
+              entry_obj = Rails.cache.send(:deserialize_entry, raw)
+              if entry_obj.respond_to?(:value)
+                deserialized = entry_obj.value
+                decode_method = "cache deserializer"
+              end
+            end
+          rescue; end
+
+          # Strategy 2: Try Marshal.load (older Rails / Marshal coder)
+          if deserialized.nil?
+            begin
+              restored = Marshal.load(raw)
+              if restored.respond_to?(:value) && restored.is_a?(ActiveSupport::Cache::Entry)
+                deserialized = restored.value
+              else
+                deserialized = restored
+              end
+              decode_method = "Marshal"
+            rescue; end
+          end
+
+          # Strategy 3: Read back through the cache store by key
+          if deserialized.nil?
+            begin
+              result = Rails.cache.read(@entry.key)
+              unless result.nil?
+                deserialized = result
+                decode_method = "cache read"
+              end
+            rescue; end
+          end
+
+          # Strategy 4: Try raw UTF-8 string interpretation
+          if deserialized.nil?
+            begin
+              str = raw.dup.force_encoding("UTF-8")
+              if str.valid_encoding? && str.match?(/[[:print:]]/)
+                deserialized = str
+                decode_method = "raw string"
+              end
+            rescue; end
+          end
+
+          if !deserialized.nil?
+            display_value = begin
+              case deserialized
+              when Hash, Array
+                # Convert symbol keys to strings for JSON compatibility
+                json_safe = JSON.parse(JSON.generate(deserialized))
+                JSON.pretty_generate(json_safe)
+              when String
+                # Try to parse as JSON for pretty-printing
+                begin
+                  parsed = JSON.parse(deserialized)
+                  JSON.pretty_generate(parsed)
+                rescue
+                  deserialized
+                end
+              when Numeric, TrueClass, FalseClass
+                deserialized.to_s
+              else
+                # Use PP for complex objects — one attribute per line
+                PP.pp(deserialized, StringIO.new).string
+              end
+            rescue
+              # Last resort: pretty-print via PP or inspect
+              begin
+                PP.pp(deserialized, StringIO.new).string
+              rescue
+                deserialized.inspect
+              end
+            end
+            value_type = deserialized.class.name
+          else
+            raw_bytes = raw.bytesize
+            display_value = raw_bytes.to_s + " bytes (serialized, preview unavailable)"
+            value_type = nil
+          end
+        %>
+        <div class="flex items-center gap-2 mb-2">
+          <% if value_type %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10"><%= value_type %></span>
+          <% end %>
+          <% if decode_method %>
+            <span class="text-[10px] text-gray-400">via <%= decode_method %></span>
+          <% end %>
+        </div>
+        <pre class="bg-gray-50 rounded-lg p-4 text-xs font-mono text-gray-700 max-h-80 overflow-y-auto ring-1 ring-inset ring-gray-900/5" style="white-space: pre-wrap; word-break: break-word; overflow-wrap: break-word;"><%= display_value.to_s.truncate(10_000) %></pre>
+      </div>
+    </div>
+  </div>
+</div>
+

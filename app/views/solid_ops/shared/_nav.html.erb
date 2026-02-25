@@ -1,0 +1,50 @@
+<nav class="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 shadow-lg shadow-slate-900/10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-14">
+      <div class="flex items-center gap-6">
+        <a href="<%= solid_ops.root_path %>" class="flex items-center gap-2.5 group">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-shadow">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+          </div>
+          <span class="font-bold text-base text-white tracking-tight">SolidOps</span>
+        </a>
+
+        <div class="hidden sm:flex items-center gap-1">
+          <%
+            nav_items = [
+              { label: "Dashboard", path: solid_ops.dashboard_path, match: [solid_ops.dashboard_path, solid_ops.root_path],
+                icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+            ]
+            if solid_queue_available?
+              nav_items << { label: "Queues", path: solid_ops.queues_path, match: [solid_ops.queues_path],
+                icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" }
+              nav_items << { label: "Running", path: solid_ops.running_jobs_path, match: [solid_ops.running_jobs_path],
+                icon: "M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" }
+            end
+            if solid_cache_available?
+              nav_items << { label: "Cache", path: solid_ops.cache_entries_path, match: [solid_ops.cache_entries_path],
+                icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" }
+            end
+            if solid_cable_available?
+              nav_items << { label: "Channels", path: solid_ops.channels_path, match: [solid_ops.channels_path],
+                icon: "M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0" }
+            end
+            nav_items << { label: "Events", path: solid_ops.events_path, match: [solid_ops.events_path],
+              icon: "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" }
+          %>
+          <% nav_items.each do |item| %>
+            <% active = item[:match].any? { |p| current_page?(p) } %>
+            <a href="<%= item[:path] %>"
+               class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150
+                      <%= active ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white hover:bg-white/5' %>">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="<%= item[:icon] %>"/></svg>
+              <%= item[:label] %>
+            </a>
+          <% end %>
+        </div>
+      </div>
+
+      <span class="text-[10px] text-slate-500 font-mono bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">v<%= SolidOps::VERSION %></span>
+    </div>
+  </div>
+</nav>

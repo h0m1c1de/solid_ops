@@ -1,0 +1,64 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Queues</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Recurring Tasks</h1>
+      <p class="text-sm text-gray-500 mt-1">Cron-style jobs configured in Solid Queue</p>
+    </div>
+    <a href="<%= solid_ops.queues_path %>" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Queues
+    </a>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <% if @tasks.any? %>
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-gray-900">Scheduled Tasks</h2>
+        <span class="text-xs text-gray-400"><%= @tasks.size %> configured</span>
+      </div>
+      <div style="padding: 0.625rem 1rem; border-bottom: 1px solid rgb(243 244 246);">
+        <div style="position: relative; display: inline-block;">
+          <svg style="position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: #9ca3af; pointer-events: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" data-solid-search="tasks-table" placeholder="Filter tasks…" style="padding: 0.375rem 0.75rem 0.375rem 2rem; font-size: 0.875rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; width: 18rem; background: rgba(249,250,251,0.5);">
+        </div>
+      </div>
+      <table id="tasks-table" class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Key</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Class / Command</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Schedule</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Queue</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="num">Priority</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Description</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @tasks.each do |task| %>
+            <tr class="hover:bg-gray-50/80 transition-colors">
+              <td class="px-6 py-3.5 font-mono text-sm font-semibold text-gray-900"><%= task.key %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-700"><%= task.class_name.presence || task.command %></td>
+              <td class="px-6 py-3.5">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-700/10"><%= task.schedule %></span>
+              </td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= task.queue_name || "default" %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= task.priority || 0 %></td>
+              <td class="px-6 py-3.5 text-xs text-gray-500 max-w-xs truncate"><%= task.description || "—" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <p class="text-sm text-gray-500 font-medium">No recurring tasks configured</p>
+        <p class="text-xs text-gray-400 mt-1">Define recurring tasks in your Solid Queue configuration</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

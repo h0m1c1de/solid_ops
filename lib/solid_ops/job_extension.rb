@@ -4,35 +4,18 @@ module SolidOps
   module JobExtension
     extend ActiveSupport::Concern
 
-    META_KEY = "__solid_ops_meta"
+    SERIALIZATION_KEY = "solid_ops_meta"
 
     included do
-      around_enqueue do |_job, block|
-        SolidOps::Context.ensure_correlation_id!
-
-        meta = {
-          correlation_id: SolidOps::Current.correlation_id,
-          request_id: SolidOps::Current.request_id,
-          tenant_id: SolidOps::Current.tenant_id,
-          actor_id: SolidOps::Current.actor_id
-        }
-
-        args = arguments || []
-        args << { META_KEY => meta }
-        self.arguments = args
-
-        block.call
-      end
-
       around_perform do |_job, block|
-        meta = extract_meta(arguments)
+        meta = @solid_ops_meta
 
         if meta
           SolidOps::Context.with(
-            correlation_id: meta[:correlation_id],
-            request_id: meta[:request_id],
-            tenant_id: meta[:tenant_id],
-            actor_id: meta[:actor_id]
+            correlation_id: meta["correlation_id"],
+            request_id: meta["request_id"],
+            tenant_id: meta["tenant_id"],
+            actor_id: meta["actor_id"]
           ) do
             block.call
           end
@@ -44,19 +27,24 @@ module SolidOps
       end
     end
 
-    class_methods do
-      def extract_meta(args)
-        return nil unless args.is_a?(Array)
-        last = args.last
-        return nil unless last.is_a?(Hash)
-        raw = last[META_KEY] || last[META_KEY.to_sym]
-        return nil unless raw.is_a?(Hash)
-        raw.transform_keys { |k| k.to_sym rescue k }
-      end
+    # Inject current context into the serialized job payload (called during enqueue)
+    def serialize
+      SolidOps::Context.ensure_correlation_id!
+
+      super.merge(
+        SERIALIZATION_KEY => {
+          "correlation_id" => SolidOps::Current.correlation_id,
+          "request_id" => SolidOps::Current.request_id,
+          "tenant_id" => SolidOps::Current.tenant_id,
+          "actor_id" => SolidOps::Current.actor_id
+        }
+      )
     end
 
-    def extract_meta(args)
-      self.class.extract_meta(args)
+    # Restore context from the serialized job payload (called before perform)
+    def deserialize(job_data)
+      super
+      @solid_ops_meta = job_data[SERIALIZATION_KEY] if job_data.key?(SERIALIZATION_KEY)
     end
   end
 end

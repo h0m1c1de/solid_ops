@@ -1,0 +1,108 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Dashboard</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Job Events</h1>
+      <p class="text-sm text-gray-500 mt-1">ActiveJob performance observed via instrumentation</p>
+    </div>
+    <%= render "solid_ops/shared/time_window" %>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Enqueued</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-blue-600"><%= number_with_delimiter(@enqueue_count) %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Performed</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-emerald-600"><%= number_with_delimiter(@perform_count) %></p>
+        <p class="text-xs text-gray-400 mt-1">avg <%= format_duration(@avg_perform_ms) %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-gray-300 to-gray-400"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Max Duration</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-gray-900"><%= format_duration(@max_perform_ms) %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r <%= @error_count > 0 ? 'from-red-400 to-red-600' : 'from-gray-200 to-gray-300' %>"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Errors</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 <%= @error_count > 0 ? 'text-red-600' : 'text-gray-400' %>"><%= @error_count %></p>
+      </div>
+    </div>
+  </div>
+
+  <% if @top_jobs.any? %>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-bold text-gray-900">Top Jobs by Volume</h2>
+      </div>
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Job Class</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Executions</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Avg Duration</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @top_jobs.each do |j| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.events_path(event_type: 'job.perform', q: j.name) %>'">
+              <td class="px-6 py-3.5 font-mono text-sm text-blue-600 font-medium"><%= j.name %></td>
+              <td class="px-6 py-3.5 font-mono text-sm font-semibold text-gray-900"><%= j.event_count %></td>
+              <td class="px-6 py-3.5 font-mono text-sm text-gray-500"><%= format_duration(j.avg_duration) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-bold text-gray-900">Recent Job Events</h2>
+    </div>
+    <% if @recent.any? %>
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Time</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Duration</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Correlation</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @recent.each do |e| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.event_path(e.id) %>'">
+              <td class="px-6 py-3.5 font-mono text-xs text-blue-600 font-medium"><%= format_time(e.occurred_at) %></td>
+              <td class="px-6 py-3.5"><span class="<%= event_pill_class(e.event_type) %>"><%= e.event_type %></span></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-700"><%= e.name %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= format_duration(e.duration_ms) %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-400"><%= e.correlation_id&.first(8) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.193 23.193 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <p class="text-sm text-gray-500 font-medium">No job events in this time window</p>
+        <p class="text-xs text-gray-400 mt-1">Try selecting a larger time range above</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

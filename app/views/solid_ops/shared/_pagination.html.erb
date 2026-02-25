@@ -1,0 +1,31 @@
+<% if total_pages > 1 %>
+  <div class="px-6 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+    <p class="text-xs text-gray-500">
+      Page <span class="font-semibold text-gray-700"><%= current_page %></span> of
+      <span class="font-semibold text-gray-700"><%= total_pages %></span>
+      <span class="text-gray-400 ml-1">(<%= number_with_delimiter(total_count) %> total)</span>
+    </p>
+    <nav class="flex items-center gap-1">
+      <% if current_page > 1 %>
+        <a href="<%= "#{request.path}?#{request.query_parameters.merge('page' => current_page - 1).to_query}" %>"
+           class="px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">&larr; Prev</a>
+      <% end %>
+
+      <% pages_to_show(current_page, total_pages).each do |pg| %>
+        <% if pg == :gap %>
+          <span class="px-1.5 py-1 text-xs text-gray-400">&hellip;</span>
+        <% elsif pg == current_page %>
+          <span class="px-2.5 py-1 text-xs font-bold text-white bg-blue-600 rounded-md shadow-sm"><%= pg %></span>
+        <% else %>
+          <a href="<%= "#{request.path}?#{request.query_parameters.merge('page' => pg).to_query}" %>"
+             class="px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"><%= pg %></a>
+        <% end %>
+      <% end %>
+
+      <% if current_page < total_pages %>
+        <a href="<%= "#{request.path}?#{request.query_parameters.merge('page' => current_page + 1).to_query}" %>"
+           class="px-2.5 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">Next &rarr;</a>
+      <% end %>
+    </nav>
+  </div>
+<% end %>

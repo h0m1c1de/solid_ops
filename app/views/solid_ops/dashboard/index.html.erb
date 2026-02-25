@@ -1,0 +1,169 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Dashboard</h1>
+      <p class="text-sm text-gray-500 mt-1">Observability overview for the Solid Trifecta</p>
+    </div>
+    <%= render "solid_ops/shared/time_window" %>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-gray-400 to-gray-500"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Events</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-gray-900"><%= number_with_delimiter(@total_events) %></p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+      <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+      <div class="p-5 pt-6">
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Correlations</p>
+        <p class="text-3xl font-extrabold font-mono mt-2 text-blue-600"><%= number_with_delimiter(@unique_correlations) %></p>
+        <p class="text-xs text-gray-400 mt-1">unique request flows</p>
+      </div>
+    </div>
+
+    <% if (job_stat = @stats["job.perform"]) %>
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
+        <div class="p-5 pt-6">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Jobs Performed</p>
+          <p class="text-3xl font-extrabold font-mono mt-2 text-emerald-600"><%= job_stat.event_count %></p>
+          <p class="text-xs text-gray-400 mt-1">avg <%= format_duration(job_stat.avg_duration) %></p>
+        </div>
+      </div>
+    <% end %>
+
+    <% if (cache_reads = @stats["cache.read"]) %>
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-400 to-amber-500"></div>
+        <div class="p-5 pt-6">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cache Reads</p>
+          <p class="text-3xl font-extrabold font-mono mt-2 text-amber-600"><%= cache_reads.event_count %></p>
+          <p class="text-xs text-gray-400 mt-1">avg <%= format_duration(cache_reads.avg_duration) %></p>
+        </div>
+      </div>
+    <% end %>
+
+    <% if (cable_stat = @stats["cable.broadcast"]) %>
+      <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+        <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+        <div class="p-5 pt-6">
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Broadcasts</p>
+          <p class="text-3xl font-extrabold font-mono mt-2 text-purple-600"><%= cable_stat.event_count %></p>
+          <p class="text-xs text-gray-400 mt-1">avg <%= format_duration(cable_stat.avg_duration) %></p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Component Status -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+    <div class="px-6 py-4 border-b border-gray-100">
+      <h2 class="text-sm font-bold text-gray-900">Solid Components</h2>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <% component_diagnostics.each do |key, diag| %>
+          <div class="rounded-xl border <%= diag[:available] ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50' : 'border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50' %> p-5 transition-shadow hover:shadow-sm">
+            <div class="flex items-center gap-2.5 mb-2">
+              <% if diag[:available] %>
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                </div>
+              <% else %>
+                <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                </div>
+              <% end %>
+              <span class="text-sm font-bold <%= diag[:available] ? 'text-emerald-900' : 'text-amber-900' %>">
+                Solid <%= key.to_s.capitalize %>
+              </span>
+            </div>
+            <p class="text-xs <%= diag[:available] ? 'text-emerald-700' : 'text-amber-700' %> font-mono break-all leading-relaxed">
+              <%= diag[:reason] %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event breakdown -->
+  <% if @stats.any? %>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-8 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-gray-900">Event Breakdown</h2>
+        <span class="text-xs text-gray-400"><%= @stats.size %> event types</span>
+      </div>
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Count</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Avg Duration</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Max Duration</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @stats.each do |type, stat| %>
+            <tr class="hover:bg-gray-50/80 transition-colors">
+              <td class="px-6 py-3.5"><span class="<%= event_pill_class(type) %>"><%= type %></span></td>
+              <td class="px-6 py-3.5 font-mono text-sm font-semibold text-gray-900"><%= stat.event_count %></td>
+              <td class="px-6 py-3.5 font-mono text-sm text-gray-500"><%= format_duration(stat.avg_duration) %></td>
+              <td class="px-6 py-3.5 font-mono text-sm text-gray-500"><%= format_duration(stat.max_duration) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <!-- Recent events -->
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-sm font-bold text-gray-900">Recent Events</h2>
+      <a href="<%= solid_ops.events_path %>" class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors">
+        View all
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+    <% if @recent_events.any? %>
+      <table class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Time</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Type</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Duration</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider">Correlation</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @recent_events.each do |e| %>
+            <tr class="hover:bg-gray-50/80 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.event_path(e.id) %>'">
+              <td class="px-6 py-3.5 font-mono text-xs text-blue-600 font-medium"><%= format_time(e.occurred_at) %></td>
+              <td class="px-6 py-3.5"><span class="<%= event_pill_class(e.event_type) %>"><%= e.event_type %></span></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-700 max-w-xs truncate"><%= e.name %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= format_duration(e.duration_ms) %></td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-400"><%= e.correlation_id&.first(8) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        </div>
+        <p class="text-sm text-gray-500 font-medium">No events in this time window</p>
+        <p class="text-xs text-gray-400 mt-1">Try selecting a larger time range above</p>
+      </div>
+    <% end %>
+  </div>
+</div>
+

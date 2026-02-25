@@ -1,0 +1,118 @@
+<% # Shared layout wrapper for all SolidOps pages %>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SolidOps<%= " – #{content_for(:title)}" if content_for?(:title) %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <%= stylesheet_link_tag "solid_ops/application", media: "all" %>
+  <%= csrf_meta_tags %>
+</head>
+<body>
+<div class="solid-ops">
+
+<%= render "solid_ops/shared/nav" %>
+
+<main class="min-h-[calc(100vh-8rem)]">
+  <% if flash[:notice] %>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 animate-slide-in">
+      <div class="flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-800 text-sm shadow-sm">
+        <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <%= flash[:notice] %>
+      </div>
+    </div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 animate-slide-in">
+      <div class="flex items-center gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-sm shadow-sm">
+        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <%= flash[:alert] %>
+      </div>
+    </div>
+  <% end %>
+
+  <%= yield %>
+</main>
+
+<footer class="border-t border-gray-200 mt-12 bg-white">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-2 text-xs text-gray-400">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+      <span>SolidOps &mdash; Rails-native observability for the Solid Trifecta</span>
+    </div>
+    <span class="text-[10px] text-gray-300 font-mono">v<%= SolidOps::VERSION %></span>
+  </div>
+</footer>
+</div><!-- /.solid-ops -->
+<script>
+(function(){
+  // ── Client-side table search ──
+  document.querySelectorAll('[data-solid-search]').forEach(function(input){
+    var tid = input.dataset.solidSearch;
+    var table = document.getElementById(tid);
+    if(!table) return;
+    input.addEventListener('input', function(){
+      var term = this.value.toLowerCase();
+      var rows = table.querySelectorAll('tbody tr');
+      var count = 0;
+      rows.forEach(function(row){
+        var match = !term || row.textContent.toLowerCase().indexOf(term) !== -1;
+        row.style.display = match ? '' : 'none';
+        if(match) count++;
+      });
+      var el = document.querySelector('[data-solid-count="'+tid+'"]');
+      if(el) el.textContent = count;
+    });
+  });
+
+  // ── Client-side column sorting ──
+  document.querySelectorAll('th[data-sort]').forEach(function(th){
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    var arrow = document.createElement('span');
+    arrow.className = 'so-sort';
+    arrow.textContent = ' \u21C5';
+    arrow.style.opacity = '0.3';
+    arrow.style.fontSize = '10px';
+    th.appendChild(arrow);
+
+    th.addEventListener('click', function(){
+      var table = th.closest('table');
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      var idx = Array.from(th.parentNode.children).indexOf(th);
+      var type = th.dataset.sort;
+      var asc = th.dataset.dir !== 'asc';
+
+      th.parentNode.querySelectorAll('th[data-sort]').forEach(function(h){
+        h.dataset.dir = '';
+        var a = h.querySelector('.so-sort');
+        if(a){ a.textContent = ' \u21C5'; a.style.opacity = '0.3'; }
+      });
+
+      th.dataset.dir = asc ? 'asc' : 'desc';
+      arrow.textContent = asc ? ' \u2191' : ' \u2193';
+      arrow.style.opacity = '0.7';
+
+      rows.sort(function(a,b){
+        var av = a.children[idx] ? a.children[idx].textContent.trim() : '';
+        var bv = b.children[idx] ? b.children[idx].textContent.trim() : '';
+        if(type === 'num'){
+          av = parseFloat(av.replace(/[^0-9.\-]/g,'')) || 0;
+          bv = parseFloat(bv.replace(/[^0-9.\-]/g,'')) || 0;
+        } else {
+          av = av.toLowerCase();
+          bv = bv.toLowerCase();
+        }
+        return av < bv ? (asc?-1:1) : av > bv ? (asc?1:-1) : 0;
+      });
+
+      rows.forEach(function(r){ tbody.appendChild(r); });
+    });
+  });
+})();
+</script>
+</body></html>

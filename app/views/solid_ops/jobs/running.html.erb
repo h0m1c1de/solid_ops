@@ -1,0 +1,134 @@
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <p class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Jobs</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Running Jobs</h1>
+      <p class="text-sm text-gray-500 mt-1"><%= @running_count %> <%= @running_count == 1 ? "job" : "jobs" %> currently executing<%= " (showing first 500)" if @running_count > 500 %></p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="<%= solid_ops.failed_jobs_path %>" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+        Failed Jobs
+      </a>
+      <a href="<%= solid_ops.queues_path %>" class="inline-flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Queues
+      </a>
+    </div>
+  </div>
+
+  <%# Summary cards %>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="h-1 bg-gradient-to-r from-blue-500 to-blue-400"></div>
+      <div class="px-5 py-4">
+        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Running</p>
+        <p class="text-2xl font-extrabold text-gray-900 mt-1"><%= @running_count %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="h-1 bg-gradient-to-r from-amber-500 to-amber-400"></div>
+      <div class="px-5 py-4">
+        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Queues Active</p>
+        <p class="text-2xl font-extrabold text-gray-900 mt-1"><%= @running_jobs.map(&:queue_name).uniq.size %></p>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="h-1 bg-gradient-to-r from-emerald-500 to-emerald-400"></div>
+      <div class="px-5 py-4">
+        <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Longest Running</p>
+        <p class="text-2xl font-extrabold text-gray-900 mt-1">
+          <% oldest = @running_jobs.min_by { |j| j.claimed_execution.created_at } %>
+          <%= oldest ? duration_since(oldest.claimed_execution.created_at) : "—" %>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <% if @running_jobs.any? %>
+      <div style="padding: 0.625rem 1rem; border-bottom: 1px solid rgb(243 244 246);">
+        <div style="position: relative; display: inline-block;">
+          <svg style="position: absolute; left: 0.625rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: #9ca3af; pointer-events: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" data-solid-search="running-table" placeholder="Filter jobs…" style="padding: 0.375rem 0.75rem 0.375rem 2rem; font-size: 0.875rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; width: 18rem; background: rgba(249,250,251,0.5);">
+        </div>
+      </div>
+      <table id="running-table" class="min-w-full divide-y divide-gray-100">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="num">ID</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Class</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Queue</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Worker</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Running For</th>
+            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-wider" data-sort="text">Claimed At</th>
+            <th class="px-6 py-3 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">Details</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <% @running_jobs.each do |job| %>
+            <% claimed = job.claimed_execution %>
+            <% elapsed = duration_since(claimed.created_at) %>
+            <% long_running = (Time.current - claimed.created_at) > 300 %>
+            <tr class="hover:bg-blue-50/30 transition-colors group" style="cursor: pointer;" onclick="window.location='<%= solid_ops.job_path(job.id) %>'">
+              <td class="px-6 py-3.5 font-mono text-xs text-blue-600 font-medium"><%= job.id %></td>
+              <td class="px-6 py-3.5">
+                <p class="font-mono text-sm text-gray-700"><%= job.class_name %></p>
+              </td>
+              <td class="px-6 py-3.5" onclick="event.stopPropagation()">
+                <a href="<%= solid_ops.queue_path(job.queue_name) %>" class="font-mono text-xs text-gray-500 hover:text-blue-600"><%= job.queue_name %></a>
+              </td>
+              <td class="px-6 py-3.5">
+                <% process = claimed.process if claimed.respond_to?(:process) %>
+                <% if process %>
+                  <p class="font-mono text-xs text-gray-600"><%= process.hostname %></p>
+                  <p class="font-mono text-[10px] text-gray-400">PID <%= process.pid %></p>
+                <% else %>
+                  <span class="text-xs text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-3.5">
+                <span class="inline-flex items-center gap-1.5 text-sm font-semibold <%= long_running ? 'text-amber-600' : 'text-blue-600' %>">
+                  <% if long_running %>
+                    <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                  <% else %>
+                    <span class="relative flex h-2 w-2">
+                      <span class="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                  <% end %>
+                  <%= elapsed %>
+                </span>
+              </td>
+              <td class="px-6 py-3.5 font-mono text-xs text-gray-500"><%= format_datetime(claimed.created_at) %></td>
+              <td class="px-6 py-3.5 text-right">
+                <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="py-20 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 mb-4">
+          <svg class="h-7 w-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4m16 0l-4 4m4-4l-4-4"/></svg>
+        </div>
+        <p class="text-sm text-gray-600 font-semibold">No jobs running</p>
+        <p class="text-xs text-gray-400 mt-1">Jobs will appear here when workers claim them for execution</p>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @running_jobs.any? %>
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+        <div>
+          <p class="text-sm font-semibold text-blue-800">Running jobs cannot be stopped</p>
+          <p class="text-xs text-blue-600 mt-0.5">Once a job is claimed by a worker, it runs to completion. To prevent new jobs from starting, pause the queue. Jobs running longer than 5 minutes are flagged with a warning icon.</p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
