@@ -19,11 +19,19 @@ module SolidOps
       request = ActionDispatch::Request.new(env) if resolve_tenant? || resolve_actor?
 
       if resolve_tenant?
-        SolidOps::Current.tenant_id = SolidOps.configuration.tenant_resolver.call(request).to_s rescue nil
+        SolidOps::Current.tenant_id = begin
+          SolidOps.configuration.tenant_resolver.call(request).to_s
+        rescue StandardError
+          nil
+        end
       end
 
       if resolve_actor?
-        SolidOps::Current.actor_id = SolidOps.configuration.actor_resolver.call(request).to_s rescue nil
+        SolidOps::Current.actor_id = begin
+          SolidOps.configuration.actor_resolver.call(request).to_s
+        rescue StandardError
+          nil
+        end
       end
 
       @app.call(env)

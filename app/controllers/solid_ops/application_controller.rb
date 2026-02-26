@@ -14,9 +14,10 @@ module SolidOps
     def authenticate_solid_ops!
       check = SolidOps.configuration.auth_check
       return unless check.respond_to?(:call)
-      unless check.call(self)
-        head :unauthorized
-      end
+
+      return if check.call(self)
+
+      head :unauthorized
     end
 
     # Server-side pagination helper — returns the paginated scope
@@ -25,12 +26,13 @@ module SolidOps
       @per_page     = per_page
       @total_count  = scope.count
       @total_pages  = [(@total_count.to_f / @per_page).ceil, 1].max
-      @current_page = [[params[:page].to_i, 1].max, @total_pages].min
+      @current_page = params[:page].to_i.clamp(1, @total_pages)
       scope.offset((@current_page - 1) * @per_page).limit(@per_page)
     end
 
     def solid_queue_available?
       return false unless defined?(SolidQueue)
+
       @@_sq_available = SolidQueue::Job.table_exists? unless defined?(@@_sq_available)
       @@_sq_available
     rescue StandardError
@@ -39,6 +41,7 @@ module SolidOps
 
     def solid_cache_available?
       return false unless defined?(SolidCache)
+
       @@_sc_available = SolidCache::Entry.table_exists? unless defined?(@@_sc_available)
       @@_sc_available
     rescue StandardError
@@ -47,6 +50,7 @@ module SolidOps
 
     def solid_cable_available?
       return false unless defined?(SolidCable)
+
       @@_scb_available = SolidCable::Message.table_exists? unless defined?(@@_scb_available)
       @@_scb_available
     rescue StandardError
@@ -54,36 +58,36 @@ module SolidOps
     end
 
     def require_solid_queue!
-      unless solid_queue_available?
-        render_component_unavailable(
-          name: "Solid Queue",
-          gem: "solid_queue",
-          install_command: "bin/rails solid_queue:install",
-          description: "background job processing"
-        )
-      end
+      return if solid_queue_available?
+
+      render_component_unavailable(
+        name: "Solid Queue",
+        gem: "solid_queue",
+        install_command: "bin/rails solid_queue:install",
+        description: "background job processing"
+      )
     end
 
     def require_solid_cache!
-      unless solid_cache_available?
-        render_component_unavailable(
-          name: "Solid Cache",
-          gem: "solid_cache",
-          install_command: "bin/rails solid_cache:install",
-          description: "database-backed caching"
-        )
-      end
+      return if solid_cache_available?
+
+      render_component_unavailable(
+        name: "Solid Cache",
+        gem: "solid_cache",
+        install_command: "bin/rails solid_cache:install",
+        description: "database-backed caching"
+      )
     end
 
     def require_solid_cable!
-      unless solid_cable_available?
-        render_component_unavailable(
-          name: "Solid Cable",
-          gem: "solid_cable",
-          install_command: "bin/rails solid_cable:install",
-          description: "database-backed Action Cable"
-        )
-      end
+      return if solid_cable_available?
+
+      render_component_unavailable(
+        name: "Solid Cable",
+        gem: "solid_cable",
+        install_command: "bin/rails solid_cable:install",
+        description: "database-backed Action Cable"
+      )
     end
 
     def render_component_unavailable(name:, gem:, install_command:, description:)
@@ -95,7 +99,7 @@ module SolidOps
     end
 
     def component_diagnostics
-      @_component_diagnostics ||= {
+      @component_diagnostics ||= {
         queue: check_component("SolidQueue", "SolidQueue::Job"),
         cache: check_component("SolidCache", "SolidCache::Entry"),
         cable: check_component("SolidCable", "SolidCable::Message")
@@ -108,19 +112,15 @@ module SolidOps
       end
 
       model = model_name.constantize
-      unless model.connection
-        return { available: false, reason: "No database connection for #{model_name}" }
-      end
+      return { available: false, reason: "No database connection for #{model_name}" } unless model.connection
 
       db_config = model.connection_db_config
       db_info = "#{db_config.adapter}://#{db_config.database}"
 
-      unless model.table_exists?
-        return { available: false, reason: "Table '#{model.table_name}' not found in #{db_info} — run db:migrate" }
-      end
+      return { available: false, reason: "Table '#{model.table_name}' not found in #{db_info} — run db:migrate" } unless model.table_exists?
 
       { available: true, reason: "Connected to #{db_info}, table '#{model.table_name}' exists" }
-    rescue => e
+    rescue StandardError => e
       { available: false, reason: "#{e.class}: #{e.message}" }
     end
   end

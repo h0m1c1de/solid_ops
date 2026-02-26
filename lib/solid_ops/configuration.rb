@@ -21,6 +21,7 @@ module SolidOps
     def sample?
       return true if sample_rate >= 1.0
       return false if sample_rate <= 0.0
+
       rand < sample_rate
     end
   end

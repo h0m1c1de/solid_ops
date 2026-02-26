@@ -10,18 +10,18 @@ module SolidOps
 
     def running
       base = SolidQueue::Job
-        .joins(:claimed_execution)
-        .includes(:claimed_execution)
-        .order("solid_queue_claimed_executions.created_at ASC")
+             .joins(:claimed_execution)
+             .includes(:claimed_execution)
+             .order("solid_queue_claimed_executions.created_at ASC")
       @running_count = base.count
       @running_jobs  = base.limit(500)
     end
 
     def failed
       scope = SolidQueue::Job
-        .joins(:failed_execution)
-        .includes(:failed_execution)
-        .order("solid_queue_failed_executions.created_at DESC")
+              .joins(:failed_execution)
+              .includes(:failed_execution)
+              .order("solid_queue_failed_executions.created_at DESC")
       @failed_jobs = paginate(scope)
     end
 

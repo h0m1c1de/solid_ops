@@ -42,9 +42,9 @@ module SolidOps
         # This ensures we configure environments / cable.yml / print database
         # instructions even when someone re-runs the installer after manually
         # adding gems.
-        @install_queue = !!(install_all || options[:queue] || gem_in_bundle?("solid_queue"))
-        @install_cache = !!(install_all || options[:cache] || gem_in_bundle?("solid_cache"))
-        @install_cable = !!(install_all || options[:cable] || gem_in_bundle?("solid_cable"))
+        @install_queue = !(install_all || options[:queue] || gem_in_bundle?("solid_queue")).nil?
+        @install_cache = !(install_all || options[:cache] || gem_in_bundle?("solid_cache")).nil?
+        @install_cable = !(install_all || options[:cable] || gem_in_bundle?("solid_cable")).nil?
 
         if !@install_queue && !@install_cache && !@install_cable
           warn_no_components_selected
@@ -62,10 +62,10 @@ module SolidOps
 
       private
 
-      SOLID_COMPONENTS = {
+      SOLID_COMPONENTS = { # rubocop:disable Lint/UselessConstantScoping
         "solid_queue" => { label: "Solid Queue", purpose: "background job processing" },
         "solid_cache" => { label: "Solid Cache", purpose: "database-backed caching" },
-        "solid_cable" => { label: "Solid Cable", purpose: "database-backed Action Cable" },
+        "solid_cable" => { label: "Solid Cable", purpose: "database-backed Action Cable" }
       }.freeze
 
       def detect_existing_components
@@ -133,7 +133,7 @@ module SolidOps
 
         return if gems_to_add.empty?
 
-        say "\n  Adding gems: #{gems_to_add.join(', ')}"
+        say "\n  Adding gems: #{gems_to_add.join(", ")}"
         gems_to_add.each { |g| append_to_file "Gemfile", "\ngem \"#{g}\"\n" }
         run "bundle install"
         say "  💡 If anything looks wrong after install, try: bin/spring stop", :cyan if spring_loaded?
@@ -141,9 +141,10 @@ module SolidOps
 
       def spring_loaded?
         return true if Gem.loaded_specs.key?("spring")
+
         gemfile = File.join(destination_root, "Gemfile")
         File.exist?(gemfile) && File.read(gemfile).match?(/^\s*gem\s+["']spring["']/)
-      rescue
+      rescue StandardError
         false
       end
 
@@ -162,10 +163,10 @@ module SolidOps
           run_generator_command "solid_cache:install"
         end
 
-        if @install_cable && !@cable_was_present
-          say "\n  Installing Solid Cable..."
-          run_generator_command "solid_cable:install"
-        end
+        return unless @install_cable && !@cable_was_present
+
+        say "\n  Installing Solid Cable..."
+        run_generator_command "solid_cable:install"
       end
 
       def install_solid_ops_migrations
@@ -175,7 +176,7 @@ module SolidOps
         # timestamp/name automatically).
         rake "railties:install:migrations"
         say "  ✓ Migrations copied. They will be applied when you run: bin/rails db:prepare", :green
-      rescue => e
+      rescue StandardError => e
         # Fallback if the rake task fails (Spring, binstub issues, etc.)
         say "  \u26a0 Could not auto-install migrations: #{e.message}", :yellow
         say "    Run manually: bin/rails railties:install:migrations", :yellow
@@ -183,9 +184,9 @@ module SolidOps
 
       def print_database_yml_instructions
         say ""
-        say "  " + "=" * 64
+        say "  #{"=" * 64}"
         say "  IMPORTANT: Update config/database.yml", :yellow
-        say "  " + "=" * 64
+        say "  #{"=" * 64}"
         say ""
         say "  The Solid component installers only configure production."
         say "  You need to update development and test to use multi-database."
@@ -204,19 +205,19 @@ module SolidOps
           if @install_queue
             say "    queue:"
             say "      <<: *default"
-            say "      database: #{db_name_for(adapter, app_name, env, 'queue')}"
+            say "      database: #{db_name_for(adapter, app_name, env, "queue")}"
             say "      migrations_paths: db/queue_migrate"
           end
           if @install_cache
             say "    cache:"
             say "      <<: *default"
-            say "      database: #{db_name_for(adapter, app_name, env, 'cache')}"
+            say "      database: #{db_name_for(adapter, app_name, env, "cache")}"
             say "      migrations_paths: db/cache_migrate"
           end
           if @install_cable
             say "    cable:"
             say "      <<: *default"
-            say "      database: #{db_name_for(adapter, app_name, env, 'cable')}"
+            say "      database: #{db_name_for(adapter, app_name, env, "cable")}"
             say "      migrations_paths: db/cable_migrate"
           end
           say ""
@@ -226,7 +227,7 @@ module SolidOps
         say ""
         say "    bin/rails db:prepare"
         say ""
-        say "  " + "=" * 64
+        say "  #{"=" * 64}"
         say ""
       end
 
@@ -262,21 +263,17 @@ module SolidOps
         configs = []
 
         # Set Solid Queue as the Active Job backend
-        if @install_queue && !content.include?("queue_adapter")
-          configs << '  config.active_job.queue_adapter = :solid_queue'
-        end
+        configs << "  config.active_job.queue_adapter = :solid_queue" if @install_queue && !content.include?("queue_adapter")
 
         # Set Solid Cache as the cache store
-        if @install_cache && !content.include?("solid_cache_store")
-          configs << '  config.cache_store = :solid_cache_store'
-        end
+        configs << "  config.cache_store = :solid_cache_store" if @install_cache && !content.include?("solid_cache_store")
 
         # Database connections for Solid Queue and Solid Cache
         if @install_queue && !content.include?("solid_queue.connects_to")
-          configs << '  config.solid_queue.connects_to = { database: { writing: :queue } }'
+          configs << "  config.solid_queue.connects_to = { database: { writing: :queue } }"
         end
         if @install_cache && !content.include?("solid_cache.connects_to")
-          configs << '  config.solid_cache.connects_to = { database: { writing: :cache } }'
+          configs << "  config.solid_cache.connects_to = { database: { writing: :cache } }"
         end
         # Solid Cable configures its database via config/cable.yml, not via
         # config.solid_cable.connects_to — so we skip it here.
@@ -321,10 +318,10 @@ module SolidOps
           modified = true
         end
 
-        if modified
-          File.write(cable_yml, content)
-          say "  Updated config/cable.yml to use solid_cable adapter in development and test"
-        end
+        return unless modified
+
+        File.write(cable_yml, content)
+        say "  Updated config/cable.yml to use solid_cable adapter in development and test"
       end
 
       def gem_in_bundle?(name)
@@ -332,18 +329,19 @@ module SolidOps
         # Falls back to reading Gemfile, which tells us it's *declared* but may
         # not yet be installed — good enough for detection purposes.
         return true if Gem.loaded_specs.key?(name)
+
         gemfile = File.join(destination_root, "Gemfile")
         File.exist?(gemfile) && File.read(gemfile).match?(/^\s*gem\s+["']#{name}["']/)
-      rescue
+      rescue StandardError
         false
       end
 
       def run_generator_command(generator_name)
         # Run as a shell command so newly-added gems are loadable in a fresh process
         result = run "bin/rails generate #{generator_name}"
-        unless result
-          say "  ⚠ #{generator_name} may not have completed. Run manually: bin/rails generate #{generator_name}", :yellow
-        end
+        return if result
+
+        say "  ⚠ #{generator_name} may not have completed. Run manually: bin/rails generate #{generator_name}", :yellow
       end
     end
   end

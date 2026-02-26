@@ -42,18 +42,24 @@ module SolidOps
 
     def queue_stats
       queues = SolidQueue::Job.group(:queue_name)
-        .select("queue_name, COUNT(*) as total_count")
-        .order(Arel.sql("COUNT(*) DESC"))
-        .map { |q| { name: q.queue_name, total: q.total_count } }
+                              .select("queue_name, COUNT(*) as total_count")
+                              .order(Arel.sql("COUNT(*) DESC"))
+                              .map { |q| { name: q.queue_name, total: q.total_count } }
 
       paused = SolidQueue::Pause.pluck(:queue_name)
 
       # Batch count queries to avoid N+1
       queue_names = queues.map { |q| q[:name] }
       ready_counts = SolidQueue::ReadyExecution.where(queue_name: queue_names).group(:queue_name).count
-      failed_counts = SolidQueue::FailedExecution.joins(:job).where(solid_queue_jobs: { queue_name: queue_names }).group("solid_queue_jobs.queue_name").count
-      scheduled_counts = SolidQueue::ScheduledExecution.joins(:job).where(solid_queue_jobs: { queue_name: queue_names }).group("solid_queue_jobs.queue_name").count
-      claimed_counts = SolidQueue::ClaimedExecution.joins(:job).where(solid_queue_jobs: { queue_name: queue_names }).group("solid_queue_jobs.queue_name").count
+      failed_counts = SolidQueue::FailedExecution.joins(:job)
+                                                 .where(solid_queue_jobs: { queue_name: queue_names })
+                                                 .group("solid_queue_jobs.queue_name").count
+      scheduled_counts = SolidQueue::ScheduledExecution.joins(:job)
+                                                       .where(solid_queue_jobs: { queue_name: queue_names })
+                                                       .group("solid_queue_jobs.queue_name").count
+      claimed_counts = SolidQueue::ClaimedExecution.joins(:job)
+                                                   .where(solid_queue_jobs: { queue_name: queue_names })
+                                                   .group("solid_queue_jobs.queue_name").count
 
       queues.each do |q|
         q[:ready] = ready_counts[q[:name]] || 0
