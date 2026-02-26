@@ -8,8 +8,8 @@ module SolidOps
       @total_entries = SolidCache::Entry.count
       @total_bytes = begin
         SolidCache::Entry.sum(:byte_size)
-      rescue StandardError
-        ActiveRecord::StatementInvalid
+      rescue ActiveRecord::StatementInvalid
+        nil
       end
 
       @entries = paginate(SolidCache::Entry.order(created_at: :desc))

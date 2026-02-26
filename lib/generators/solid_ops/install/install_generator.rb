@@ -42,9 +42,9 @@ module SolidOps
         # This ensures we configure environments / cable.yml / print database
         # instructions even when someone re-runs the installer after manually
         # adding gems.
-        @install_queue = !(install_all || options[:queue] || gem_in_bundle?("solid_queue")).nil?
-        @install_cache = !(install_all || options[:cache] || gem_in_bundle?("solid_cache")).nil?
-        @install_cable = !(install_all || options[:cable] || gem_in_bundle?("solid_cable")).nil?
+        @install_queue = install_all || options[:queue] || gem_in_bundle?("solid_queue")
+        @install_cache = install_all || options[:cache] || gem_in_bundle?("solid_cache")
+        @install_cable = install_all || options[:cable] || gem_in_bundle?("solid_cable")
 
         if !@install_queue && !@install_cache && !@install_cable
           warn_no_components_selected
