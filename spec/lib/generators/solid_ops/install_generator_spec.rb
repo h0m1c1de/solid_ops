@@ -200,7 +200,7 @@ RSpec.describe SolidOps::Generators::InstallGenerator, type: :generator do
       end
 
       it "does not try to add the gem again" do
-        gen = run_generator(%w[--queue])
+        run_generator(%w[--queue])
         # add_missing_gems only appends gems NOT in the Gemfile
         content = File.read(File.join(tmpdir, "Gemfile"))
         expect(content.scan("solid_queue").count).to eq(1)
