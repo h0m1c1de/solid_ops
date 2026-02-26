@@ -6,6 +6,29 @@ A mountable Rails engine that gives you a real-time dashboard and management UI 
 
 ![Ruby](https://img.shields.io/badge/ruby-%3E%3D%203.2-red) ![Rails](https://img.shields.io/badge/rails-%3E%3D%207.1-red) ![License](https://img.shields.io/badge/license-MIT-green)
 
+## Quick Start
+
+Get SolidOps running in a fresh Rails app in under two minutes:
+
+```bash
+# 1. Add the gem
+bundle add solid_ops
+
+# 2. Run the installer (installs Solid Queue/Cache/Cable if missing)
+bin/rails generate solid_ops:install --all
+
+# 3. Update config/database.yml for multi-database (see "Database setup" below)
+
+# 4. Create databases and run migrations (safe for existing apps — never drops data)
+bin/rails db:prepare
+
+# 5. Start your app and visit the dashboard
+bin/rails server
+# → http://localhost:3000/solid_ops
+```
+
+The dashboard works immediately — enqueue a job, write to cache, or broadcast on Cable, then refresh the SolidOps dashboard to see events flowing in.
+
 ## Features
 
 **Observability** — automatic event capture via ActiveSupport instrumentation:
@@ -257,7 +280,7 @@ The engine mounts at `/solid_ops` by default. Available pages:
 ## Development
 
 ```bash
-git clone https://github.com/samuel-murphy/solid_ops.git
+git clone https://github.com/h0m1c1de/solid_ops.git
 cd solid_ops
 bin/setup
 rake spec
@@ -278,7 +301,7 @@ Requires Node.js (for `npx tailwindcss@3`). The compiled CSS is checked into git
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/samuel-murphy/solid_ops. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at https://github.com/h0m1c1de/solid_ops. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
