@@ -6,7 +6,11 @@ module SolidOps
 
     def index
       @total_entries = SolidCache::Entry.count
-      @total_bytes = SolidCache::Entry.sum(:byte_size) rescue ActiveRecord::StatementInvalid; 0
+      @total_bytes = begin
+        SolidCache::Entry.sum(:byte_size)
+      rescue StandardError
+        ActiveRecord::StatementInvalid
+      end
 
       @entries = paginate(SolidCache::Entry.order(created_at: :desc))
     end
@@ -26,7 +30,7 @@ module SolidOps
       count = SolidCache::Entry.count
       loop do
         deleted = SolidCache::Entry.limit(1_000).delete_all
-        break if deleted == 0
+        break if deleted.zero?
       end
       redirect_to cache_entries_path, notice: "#{count} cache entries cleared."
     end

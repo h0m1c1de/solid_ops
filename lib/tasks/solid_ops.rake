@@ -22,8 +22,8 @@ namespace :solid_ops do
 
     puts "SolidOps Event Stats"
     puts "  Total events: #{total}"
-    puts "  Oldest: #{oldest || 'none'}"
-    puts "  Newest: #{newest || 'none'}"
+    puts "  Oldest: #{oldest || "none"}"
+    puts "  Newest: #{newest || "none"}"
     puts ""
     SolidOps::Event.group(:event_type).count.sort_by { |_, v| -v }.each do |type, count|
       puts "  #{type}: #{count}"

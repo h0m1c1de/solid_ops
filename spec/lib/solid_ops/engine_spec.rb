@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe SolidOps::Engine do
   describe "initializers" do
     it "registers as a Rails engine" do
-      expect(described_class.superclass).to eq(::Rails::Engine)
+      expect(described_class.superclass).to eq(Rails::Engine)
     end
 
     it "isolates namespace to SolidOps" do
@@ -24,7 +24,7 @@ RSpec.describe SolidOps::Engine do
       end
 
       it "does not warn when auth_check is configured" do
-        SolidOps.configure { |c| c.auth_check = ->(ctrl) { true } }
+        SolidOps.configure { |c| c.auth_check = ->(_ctrl) { true } }
         expect(SolidOps.configuration.auth_check).to respond_to(:call)
       end
     end

@@ -17,7 +17,7 @@ gem "rubocop", "~> 1.21"
 gem "simplecov", require: false
 
 # Dummy app deps
-gem "sqlite3"
-gem "solid_queue"
-gem "solid_cache"
 gem "solid_cable"
+gem "solid_cache"
+gem "solid_queue"
+gem "sqlite3"

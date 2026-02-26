@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateSolidOpsEvents < ActiveRecord::Migration[7.1]
   def change
     create_table :solid_ops_events do |t|
@@ -24,6 +26,6 @@ class CreateSolidOpsEvents < ActiveRecord::Migration[7.1]
     add_index :solid_ops_events, :tenant_id
     add_index :solid_ops_events, :actor_id
     add_index :solid_ops_events, :name
-    add_index :solid_ops_events, [:event_type, :occurred_at]
+    add_index :solid_ops_events, %i[event_type occurred_at]
   end
 end

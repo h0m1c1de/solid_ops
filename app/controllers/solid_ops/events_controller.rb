@@ -2,7 +2,6 @@
 
 module SolidOps
   class EventsController < ApplicationController
-
     def index
       scope = SolidOps::Event.all
       scope = scope.for_type(params[:event_type])
@@ -20,17 +19,18 @@ module SolidOps
     def show
       @event = SolidOps::Event.find(params[:id])
       @related = SolidOps::Event
-        .where(correlation_id: @event.correlation_id)
-        .chronological
-        .limit(200)
+                 .where(correlation_id: @event.correlation_id)
+                 .chronological
+                 .limit(200)
     end
 
     private
 
     def parse_time(val)
       return nil if val.blank?
+
       Time.zone.parse(val)
-    rescue
+    rescue StandardError
       nil
     end
   end

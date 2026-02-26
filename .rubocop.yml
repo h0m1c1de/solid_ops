@@ -1,8 +1,71 @@
 AllCops:
   TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "node_modules/**/*"
+    - "coverage/**/*"
+    - "pkg/**/*"
+    - "vendor/**/*"
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Style/Documentation:
+  Enabled: false
+
+Style/ClassVars:
+  Enabled: false
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "lib/tasks/**/*"
+    - "config/routes.rb"
+    - "*.gemspec"
+
+Metrics/ModuleLength:
+  Exclude:
+    - "lib/solid_ops/subscribers.rb"
+
+Metrics/ClassLength:
+  Exclude:
+    - "lib/solid_ops/subscribers.rb"
+    - "lib/generators/**/*"
+
+Metrics/MethodLength:
+  Max: 25
+  Exclude:
+    - "lib/solid_ops/subscribers.rb"
+    - "lib/generators/**/*"
+    - "lib/solid_ops/middleware.rb"
+
+Metrics/AbcSize:
+  Max: 45
+  Exclude:
+    - "lib/solid_ops/subscribers.rb"
+    - "lib/generators/**/*"
+
+Metrics/CyclomaticComplexity:
+  Max: 12
+  Exclude:
+    - "lib/generators/**/*"
+
+Metrics/PerceivedComplexity:
+  Max: 12
+  Exclude:
+    - "lib/generators/**/*"
+
+Naming/MethodParameterName:
+  AllowedNames:
+    - ms
+    - t
+
+Layout/LineLength:
+  Max: 150
+  Exclude:
+    - "spec/**/*"
+    - "lib/generators/**/*"

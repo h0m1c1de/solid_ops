@@ -19,7 +19,7 @@ module Dummy
     config.eager_load = false
     config.active_job.queue_adapter = :test
     config.secret_key_base = "test-secret-key-base-for-solid-ops-specs"
-    config.root = File.expand_path("../..", __FILE__)
+    config.root = File.expand_path("..", __dir__)
     config.action_controller.allow_forgery_protection = false
     config.action_dispatch.show_exceptions = :none
   end

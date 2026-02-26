@@ -4,7 +4,10 @@ require "rails_helper"
 
 RSpec.describe SolidOps::Subscribers do
   before do
-    SolidOps.configure { |c| c.enabled = true; c.sample_rate = 1.0 }
+    SolidOps.configure do |c|
+      c.enabled = true
+      c.sample_rate = 1.0
+    end
     SolidOps::Current.correlation_id = "test-corr"
   end
 
@@ -29,14 +32,14 @@ RSpec.describe SolidOps::Subscribers do
     end
 
     it "creates an Event record" do
-      expect {
+      expect do
         record_event!(
           event_type: "test.event",
           name: "TestJob",
           duration_ms: 42.5,
           metadata: { foo: "bar" }
         )
-      }.to change(SolidOps::Event, :count).by(1)
+      end.to change(SolidOps::Event, :count).by(1)
 
       event = SolidOps::Event.last
       expect(event.event_type).to eq("test.event")
@@ -48,17 +51,17 @@ RSpec.describe SolidOps::Subscribers do
     it "does not record when sampling returns false" do
       SolidOps.configure { |c| c.sample_rate = 0.0 }
 
-      expect {
+      expect do
         record_event!(event_type: "test.skip", name: "x", duration_ms: 1, metadata: {})
-      }.not_to change(SolidOps::Event, :count)
+      end.not_to change(SolidOps::Event, :count)
     end
 
     it "prevents recursive recording" do
       Thread.current[:solid_ops_recording] = true
 
-      expect {
+      expect do
         record_event!(event_type: "test.recursive", name: "x", duration_ms: 1, metadata: {})
-      }.not_to change(SolidOps::Event, :count)
+      end.not_to change(SolidOps::Event, :count)
 
       Thread.current[:solid_ops_recording] = false
     end
@@ -96,9 +99,9 @@ RSpec.describe SolidOps::Subscribers do
     it "handles record errors gracefully" do
       allow(SolidOps::Event).to receive(:create!).and_raise(ActiveRecord::StatementInvalid, "DB gone")
 
-      expect {
+      expect do
         record_event!(event_type: "test.fail", name: "x", duration_ms: 1, metadata: {})
-      }.not_to raise_error
+      end.not_to raise_error
     end
 
     it "resets the recording flag even on error" do
@@ -162,7 +165,7 @@ RSpec.describe SolidOps::Subscribers do
     end
 
     it "converts non-strings and measures" do
-      expect(bytesize(12345)).to eq(5) # "12345".bytesize
+      expect(bytesize(12_345)).to eq(5) # "12345".bytesize
     end
   end
 end

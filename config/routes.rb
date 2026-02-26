@@ -8,13 +8,13 @@ SolidOps::Engine.routes.draw do
   get "dashboard/cable", to: "dashboard#cable", as: :dashboard_cable
 
   # Queue management (Solid Queue)
-  resources :queues, only: [:index, :show] do
+  resources :queues, only: %i[index show] do
     member do
       post :pause
       post :resume
     end
   end
-  resources :jobs, only: [:show, :destroy] do
+  resources :jobs, only: %i[show destroy] do
     member do
       post :retry
       post :discard
@@ -31,19 +31,19 @@ SolidOps::Engine.routes.draw do
   resources :processes, only: [:index]
 
   # Cache management (Solid Cache)
-  resources :cache_entries, only: [:index, :show, :destroy], path: "cache" do
+  resources :cache_entries, only: %i[index show destroy], path: "cache" do
     collection do
       post :clear_all
     end
   end
 
   # Cable management (Solid Cable)
-  resources :channels, only: [:index, :show] do
+  resources :channels, only: %i[index show] do
     collection do
       post :trim
     end
   end
 
   # Event explorer
-  resources :events, only: [:index, :show]
+  resources :events, only: %i[index show]
 end

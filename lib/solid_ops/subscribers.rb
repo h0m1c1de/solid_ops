@@ -125,7 +125,7 @@ module SolidOps
 
         SolidOps::Context.ensure_correlation_id!
 
-        meta = (metadata || {})
+        meta = metadata || {}
         meta = SolidOps.configuration.redactor.call(meta) if SolidOps.configuration.redactor
         meta = truncate_meta(meta)
 
@@ -151,20 +151,24 @@ module SolidOps
         max = SolidOps.configuration.max_payload_bytes.to_i
         safe = safe_serialize(meta)
         return safe if max <= 0
+
         json = safe.to_json
         return safe if json.bytesize <= max
+
         { truncated: true, max_bytes: max, bytes: json.bytesize }
-      rescue
+      rescue StandardError
         { unserializable: true }
       end
 
       def job_name(job)
         return "unknown" unless job
+
         job.class.name.to_s
       end
 
       def job_metadata(job)
         return {} unless job
+
         {
           job_id: job.job_id,
           provider_job_id: job.provider_job_id,
@@ -177,8 +181,9 @@ module SolidOps
         max = SolidOps.configuration.max_payload_bytes.to_i
         json = Array(args).map { |a| safe_serialize(a) }.to_json
         return Array(args).map { |a| safe_serialize(a) } if max <= 0 || json.bytesize <= max
+
         { truncated: true, max_bytes: max }
-      rescue
+      rescue StandardError
         { unserializable: true }
       end
 
@@ -193,15 +198,16 @@ module SolidOps
         else
           obj.to_s
         end
-      rescue
+      rescue StandardError
         obj.class.name.to_s
       end
 
       def bytesize(value)
         return nil if value.nil?
+
         s = value.is_a?(String) ? value : value.to_s
         s.bytesize
-      rescue
+      rescue StandardError
         nil
       end
     end

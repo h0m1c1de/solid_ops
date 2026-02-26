@@ -9,8 +9,9 @@ Gem::Specification.new do |spec|
   spec.email = ["samuelmurphy15@gmail.com"]
 
   spec.summary = "Rails-native observability and control plane for the Solid Trifecta"
-  spec.description = "SolidOps provides a real-time dashboard and management UI for Solid Queue, Solid Cache, and Solid Cable — built as a mountable Rails engine with zero JavaScript dependencies."
-  spec.homepage = "https://github.com/samuel-murphy/solid_ops"
+  spec.description = "SolidOps provides a real-time dashboard and management UI for Solid Queue, " \
+                     "Solid Cache, and Solid Cable — built as a mountable Rails engine with zero JavaScript dependencies."
+  spec.homepage = "https://github.com/h0m1c1de/solid_ops"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
@@ -18,6 +19,7 @@ Gem::Specification.new do |spec|
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/samuel-murphy/solid_ops"
   spec.metadata["changelog_uri"] = "https://github.com/samuel-murphy/solid_ops/blob/main/CHANGELOG.md"
+  spec.metadata["rubygems_mfa_required"] = "true"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.

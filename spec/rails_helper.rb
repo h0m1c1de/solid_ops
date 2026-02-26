@@ -3,7 +3,7 @@
 require "simplecov"
 SimpleCov.start do
   add_filter "/spec/"
-  add_filter "/lib/generators/"  # Generator tested separately, hard to unit-test fully
+  add_filter "/lib/generators/" # Generator tested separately, hard to unit-test fully
   enable_coverage :branch
 
   minimum_coverage line: 95, branch: 85
@@ -49,7 +49,7 @@ ActiveRecord::Schema.define do
   add_index :solid_ops_events, :tenant_id
   add_index :solid_ops_events, :actor_id
   add_index :solid_ops_events, :name
-  add_index :solid_ops_events, [:event_type, :occurred_at]
+  add_index :solid_ops_events, %i[event_type occurred_at]
 
   # Minimal Solid Queue tables for testing
   create_table :solid_queue_jobs, force: true do |t|

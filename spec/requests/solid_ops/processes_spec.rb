@@ -20,7 +20,7 @@ RSpec.describe "SolidOps::ProcessesController", type: :request do
       SolidQueue::Process.create!(
         kind: "Worker",
         last_heartbeat_at: Time.current,
-        pid: 12345,
+        pid: 12_345,
         hostname: "web-1",
         name: "worker-1",
         created_at: Time.current
