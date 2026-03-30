@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [0.2.1] - 2026-03-30
+
+- Updated Rails and supporting gem dependencies
+- Updated GitHub Actions workflow dependencies for CI and release automation
+
 ## [0.2.0] - 2026-02-26
 
 - Added install generator test suite
