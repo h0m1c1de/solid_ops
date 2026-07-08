@@ -11,7 +11,7 @@ gem "rake", "~> 13.4"
 gem "rspec", "~> 3.0"
 gem "rspec-rails"
 
-gem "rubocop", "~> 1.86"
+gem "rubocop", "~> 1.88"
 
 # Coverage
 gem "simplecov", require: false
